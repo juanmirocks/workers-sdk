@@ -131,7 +131,14 @@ import {
 	r2BucketSippyGetCommand,
 	r2BucketSippyNamespace,
 } from "./r2/sippy";
-import { secret, secretBulkHandler, secretBulkOptions } from "./secret";
+import {
+	secretBulkAlias,
+	secretBulkCommand,
+	secretDeleteCommand,
+	secretListCommand,
+	secretNamespace,
+	secretPutCommand,
+} from "./secret";
 import {
 	addBreadcrumb,
 	captureGlobalException,
@@ -468,13 +475,15 @@ export function createCLIParser(argv: string[]) {
 	);
 
 	// secret
-	wrangler.command(
-		"secret",
-		"🤫 Generate a secret that can be referenced in a Worker",
-		(secretYargs) => {
-			return secret(secretYargs.command(subHelp));
-		}
-	);
+	registry.define([
+		{ command: "wrangler secret", definition: secretNamespace },
+		{ command: "wrangler secret put", definition: secretPutCommand },
+		{ command: "wrangler secret delete", definition: secretDeleteCommand },
+		{ command: "wrangler secret list", definition: secretListCommand },
+		{ command: "wrangler secret bulk", definition: secretBulkCommand },
+		{ command: "wrangler secret:bulk", definition: secretBulkAlias },
+	]);
+	registry.registerNamespace("secret");
 
 	// types
 	wrangler.command(
@@ -889,14 +898,6 @@ export function createCLIParser(argv: string[]) {
 		// "👷 Create or change your workers.dev subdomain.",
 		subdomainOptions,
 		subdomainHandler
-	);
-
-	// [DEPRECATED] secret:bulk
-	wrangler.command(
-		"secret:bulk [json]",
-		false,
-		secretBulkOptions,
-		secretBulkHandler
 	);
 
 	// [DEPRECATED] generate
