@@ -209,15 +209,6 @@ export default class WorkersTestRunner extends VitestTestRunner {
 		initialState.current = this.state.current;
 	}
 
-	async onBeforeRunFiles() {
-		if (DEBUG) {
-			__console.log("onBeforeRunFiles");
-			await scheduler.wait(100);
-		}
-
-		resetMockAgent(fetchMock);
-		return super.onBeforeRunFiles();
-	}
 	async onAfterRunFiles() {
 		if (DEBUG) {
 			__console.log("onAfterRunFiles");
