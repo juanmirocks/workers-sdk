@@ -537,6 +537,7 @@ function getModuleFallbackService(ctx: Vitest): ModuleFallbackService {
 	if (service !== undefined) {
 		return service;
 	}
+	// @ts-expect-error ctx.vitenode is marked as internal
 	service = handleModuleFallbackRequest.bind(undefined, ctx.vitenode.server);
 	moduleFallbackServices.set(ctx, service);
 	return service;
