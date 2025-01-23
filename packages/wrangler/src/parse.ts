@@ -5,6 +5,7 @@ import { formatMessagesSync } from "esbuild";
 import { parse as jsoncParse, printParseErrorCode } from "jsonc-parser";
 import { UserError } from "./errors";
 import { logger } from "./logger";
+import type { TelemetryMessage } from "./errors";
 import type { ParseError as JsoncParseError } from "jsonc-parser";
 
 export type Message = {
@@ -12,7 +13,7 @@ export type Message = {
 	location?: Location;
 	notes?: Message[];
 	kind?: "warning" | "error";
-};
+} & TelemetryMessage;
 
 export type Location = File & {
 	line: number;
@@ -56,8 +57,8 @@ export class ParseError extends UserError implements Message {
 	readonly location?: Location;
 	readonly kind: "warning" | "error";
 
-	constructor({ text, notes, location, kind }: Message) {
-		super(text);
+	constructor({ text, notes, location, kind, telemetryMessage }: Message) {
+		super(text, { telemetryMessage });
 		this.name = this.constructor.name;
 		this.text = text;
 		this.notes = notes ?? [];
@@ -132,7 +133,11 @@ export function parseTOML(input: string, file?: string): TOML.JsonMap | never {
 			file,
 			fileText: input,
 		};
-		throw new ParseError({ text, location });
+		throw new ParseError({
+			text,
+			location,
+			telemetryMessage: "TOML parse error",
+		});
 	}
 }
 
@@ -174,7 +179,11 @@ export function parseJSON<T>(input: string, file?: string): T {
 			message.substring(index + JSON_ERROR_SUFFIX.length)
 		);
 		const location = indexLocation({ file, fileText: input }, position);
-		throw new ParseError({ text, location });
+		throw new ParseError({
+			text,
+			location,
+			telemetryMessage: "JSON parse error",
+		});
 	}
 }
 
@@ -191,6 +200,7 @@ export function parseJSONC<T>(input: string, file?: string): T {
 				...indexLocation({ file, fileText: input }, errors[0].offset + 1),
 				length: errors[0].length,
 			},
+			telemetryMessage: "JSONC parse error",
 		});
 	}
 	return data;
@@ -230,6 +240,7 @@ export function readFileSync(file: string): string {
 					text: message.replace(file, resolve(file)),
 				},
 			],
+			telemetryMessage: "Could not read file",
 		});
 	}
 }
